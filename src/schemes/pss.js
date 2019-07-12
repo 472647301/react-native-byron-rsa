@@ -3,8 +3,15 @@
  */
 
 var BigInteger = require('../libs/jsbn');
-var createHash = require('create-hash/browser')
-var Buffer = require('buffer').Buffer
+var crypt = require('crypto');
+
+module.exports = {
+    isEncryption: false,
+    isSignature: true
+};
+
+var DEFAULT_HASH_FUNCTION = 'sha1';
+var DEFAULT_SALT_LENGTH = 20;
 
 function randomBytes(len) {
     var arr = []
@@ -14,13 +21,6 @@ function randomBytes(len) {
     return Buffer(arr)
 }
 
-module.exports = {
-    isEncryption: false,
-    isSignature: true
-};
-
-var DEFAULT_HASH_FUNCTION = 'sha1';
-var DEFAULT_SALT_LENGTH = 20;
 
 module.exports.makeScheme = function (key, options) {
     var OAEP = require('./schemes').pkcs1_oaep;
@@ -41,7 +41,7 @@ module.exports.makeScheme = function (key, options) {
     }
 
     Scheme.prototype.sign = function (buffer) {
-        var mHash = createHash(this.options.signingSchemeOptions.hash || DEFAULT_HASH_FUNCTION);
+        var mHash = crypt.createHash(this.options.signingSchemeOptions.hash || DEFAULT_HASH_FUNCTION);
         mHash.update(buffer);
 
         var encoded = this.emsa_pss_encode(mHash.digest(), this.key.keySize - 1);
@@ -57,7 +57,7 @@ module.exports.makeScheme = function (key, options) {
         var emLen = Math.ceil((this.key.keySize - 1) / 8);
         var m = this.key.$doPublic(signature).toBuffer(emLen);
 
-        var mHash = createHash(this.options.signingSchemeOptions.hash || DEFAULT_HASH_FUNCTION);
+        var mHash = crypt.createHash(this.options.signingSchemeOptions.hash || DEFAULT_HASH_FUNCTION);
         mHash.update(buffer);
 
         return this.emsa_pss_verify(mHash.digest(), m, this.key.keySize - 1);
@@ -92,7 +92,7 @@ module.exports.makeScheme = function (key, options) {
         mHash.copy(Mapostrophe, 8);
         salt.copy(Mapostrophe, 8 + mHash.length);
 
-        var H = createHash(hash);
+        var H = crypt.createHash(hash);
         H.update(Mapostrophe);
         H = H.digest();
 
@@ -181,7 +181,7 @@ module.exports.makeScheme = function (key, options) {
         mHash.copy(Mapostrophe, 8);
         salt.copy(Mapostrophe, 8 + mHash.length);
 
-        var Hapostrophe = createHash(hash);
+        var Hapostrophe = crypt.createHash(hash);
         Hapostrophe.update(Mapostrophe);
         Hapostrophe = Hapostrophe.digest();
 

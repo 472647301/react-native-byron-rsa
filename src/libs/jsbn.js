@@ -36,8 +36,15 @@
  * 2014 rzcoder
  */
 
+var crypt = require('crypto');
 var _ = require('../utils')._;
-var Buffer = require('buffer').Buffer
+
+// Bits per digit
+var dbits;
+
+// JavaScript engine analysis
+var canary = 0xdeadbeefcafe;
+var j_lm = ((canary & 0xffffff) == 0xefcafe);
 
 function randomBytes(len) {
     var arr = []
@@ -47,12 +54,6 @@ function randomBytes(len) {
     return Buffer(arr)
 }
 
-// Bits per digit
-var dbits;
-
-// JavaScript engine analysis
-var canary = 0xdeadbeefcafe;
-var j_lm = ((canary & 0xffffff) == 0xefcafe);
 
 // (public) Constructor
 function BigInteger(a, b) {

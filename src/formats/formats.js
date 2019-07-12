@@ -1,3 +1,5 @@
+var _ = require('../utils')._;
+
 function formatParse(format) {
     format = format.split('-');
     var keyType = 'private';

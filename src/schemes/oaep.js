@@ -1,8 +1,9 @@
 /**
  * PKCS_OAEP signature scheme
  */
-var createHash = require('create-hash/browser')
-var Buffer = require('buffer').Buffer
+
+var BigInteger = require('../libs/jsbn');
+var crypt = require('crypto');
 
 function randomBytes(len) {
     var arr = []
@@ -11,6 +12,7 @@ function randomBytes(len) {
     }
     return Buffer(arr)
 }
+
 
 module.exports = {
     isEncryption: true,
@@ -53,7 +55,7 @@ module.exports.eme_oaep_mgf1 = function (seed, maskLength, hashFunction) {
     var T = Buffer.alloc(hLen * count);
     var c = Buffer.alloc(4);
     for (var i = 0; i < count; ++i) {
-        var hash = createHash(hashFunction);
+        var hash = crypt.createHash(hashFunction);
         hash.update(seed);
         c.writeUInt32BE(i, 0);
         hash.update(c);
@@ -91,14 +93,15 @@ module.exports.makeScheme = function (key, options) {
             throw new Error("Message is too long to encode into an encoded message with a length of " + emLen + " bytes, increase" +
             "emLen to fix this error (minimum value for given parameters and options: " + (emLen - 2 * hLen - 2) + ")");
         }
-        
-        var lHash = createHash(hash);
+
+        var lHash = crypt.createHash(hash);
         lHash.update(label);
         lHash = lHash.digest();
 
         var PS = Buffer.alloc(emLen - buffer.length - 2 * hLen - 1); // Padding "String"
         PS.fill(0); // Fill the buffer with octets of 0
         PS[PS.length - 1] = 1;
+
         var DB = Buffer.concat([lHash, PS, buffer]);
         var seed = randomBytes(hLen);
 
@@ -161,9 +164,11 @@ module.exports.makeScheme = function (key, options) {
         for (i = 0; i < DB.length; i++) {
             DB[i] ^= mask[i];
         }
-        var lHash = createHash(hash);
+
+        var lHash = crypt.createHash(hash);
         lHash.update(label);
         lHash = lHash.digest();
+
         var lHashEM = DB.slice(0, hLen);
         if (lHashEM.toString("hex") != lHash.toString("hex")) {
             throw new Error("Error decoding message, the lHash calculated from the label provided and the lHash in the encrypted data do not match.");

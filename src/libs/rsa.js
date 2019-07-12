@@ -40,11 +40,11 @@
  */
 
 var _ = require('../utils')._;
+var crypt = require('crypto');
 var BigInteger = require('./jsbn.js');
 var utils = require('../utils.js');
 var schemes = require('../schemes/schemes.js');
 var encryptEngines = require('../encryptEngines/encryptEngines.js');
-var Buffer = require('buffer').Buffer
 
 exports.BigInteger = BigInteger;
 module.exports.Key = (function () {

@@ -3,8 +3,8 @@
  */
 
 var BigInteger = require('../libs/jsbn');
-var createHash = require('create-hash/browser')
-var Buffer = require('buffer').Buffer
+var crypt = require('crypto');
+var constants = require('constants');
 var SIGN_INFO_HEAD = {
     md2: Buffer.from('3020300c06082a864886f70d020205000410', 'hex'),
     md5: Buffer.from('3020300c06082a864886f70d020505000410', 'hex'),
@@ -31,6 +31,7 @@ function randomBytes(len) {
     return Buffer(arr)
 }
 
+
 module.exports = {
     isEncryption: true,
     isSignature: true
@@ -43,6 +44,9 @@ module.exports.makeScheme = function (key, options) {
     }
 
     Scheme.prototype.maxMessageLength = function () {
+        if (this.options.encryptionSchemeOptions && this.options.encryptionSchemeOptions.padding == constants.RSA_NO_PADDING) {
+            return this.key.encryptedDataLength;
+        }
         return this.key.encryptedDataLength - 11;
     };
 
@@ -57,6 +61,12 @@ module.exports.makeScheme = function (key, options) {
         var filled;
         if (buffer.length > this.key.maxMessageLength) {
             throw new Error("Message too long for RSA (n=" + this.key.encryptedDataLength + ", l=" + buffer.length + ")");
+        }
+        if (this.options.encryptionSchemeOptions && this.options.encryptionSchemeOptions.padding == constants.RSA_NO_PADDING) {
+            //RSA_NO_PADDING treated like JAVA left pad with zero character
+            filled = Buffer.alloc(this.key.maxMessageLength - buffer.length);
+            filled.fill(0);
+            return Buffer.concat([filled, buffer]);
         }
 
         /* Type 1: zeros padding for private key encrypt */
@@ -95,6 +105,17 @@ module.exports.makeScheme = function (key, options) {
         options = options || {};
         var i = 0;
 
+        if (this.options.encryptionSchemeOptions && this.options.encryptionSchemeOptions.padding == constants.RSA_NO_PADDING) {
+            //RSA_NO_PADDING treated like JAVA left pad with zero character
+            var unPad;
+            if (typeof buffer.lastIndexOf == "function") { //patch for old node version
+                unPad = buffer.slice(buffer.lastIndexOf('\0') + 1, buffer.length);
+            } else {
+                unPad = buffer.slice(String.prototype.lastIndexOf.call(buffer, '\0') + 1, buffer.length);
+            }
+            return unPad;
+        }
+
         if (buffer.length < 4) {
             return null;
         }
@@ -130,16 +151,24 @@ module.exports.makeScheme = function (key, options) {
         if (this.options.environment === 'browser') {
             hashAlgorithm = SIGN_ALG_TO_HASH_ALIASES[hashAlgorithm] || hashAlgorithm;
 
-            var hasher = createHash(hashAlgorithm);
+            var hasher = crypt.createHash(hashAlgorithm);
             hasher.update(buffer);
             var hash = this.pkcs1pad(hasher.digest(), hashAlgorithm);
             var res = this.key.$doPrivate(new BigInteger(hash)).toBuffer(this.key.encryptedDataLength);
 
             return res;
+        } else {
+            var signer = crypt.createSign('RSA-' + hashAlgorithm.toUpperCase());
+            signer.update(buffer);
+            return signer.sign(this.options.rsaUtils.exportKey('private'));
         }
     };
 
     Scheme.prototype.verify = function (buffer, signature, signature_encoding) {
+        if (this.options.encryptionSchemeOptions && this.options.encryptionSchemeOptions.padding == constants.RSA_NO_PADDING) {
+            //RSA_NO_PADDING has no verify data
+            return false;
+        }
         var hashAlgorithm = this.options.signingSchemeOptions.hash || DEFAULT_HASH_FUNCTION;
         if (this.options.environment === 'browser') {
             hashAlgorithm = SIGN_ALG_TO_HASH_ALIASES[hashAlgorithm] || hashAlgorithm;
@@ -148,12 +177,16 @@ module.exports.makeScheme = function (key, options) {
                 signature = Buffer.from(signature, signature_encoding);
             }
 
-            var hasher = createHash(hashAlgorithm);
+            var hasher = crypt.createHash(hashAlgorithm);
             hasher.update(buffer);
             var hash = this.pkcs1pad(hasher.digest(), hashAlgorithm);
             var m = this.key.$doPublic(new BigInteger(signature));
 
             return m.toBuffer().toString('hex') == hash.toString('hex');
+        } else {
+            var verifier = crypt.createVerify('RSA-' + hashAlgorithm.toUpperCase());
+            verifier.update(buffer);
+            return verifier.verify(this.options.rsaUtils.exportKey('public'), signature, signature_encoding);
         }
     };
 
