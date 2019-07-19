@@ -22,4 +22,5 @@ npm i
 ```
 node test.js
 ```
-
+### api文档
+[node-rsa](https://github.com/rzcoder/node-rsa)
