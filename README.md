@@ -4,18 +4,18 @@
 ### 安装
  
 ```
-npm i byron-node-rsa or yarn add byron-node-rsa
+npm i react-native-byron-rsa or yarn add react-native-byron-rsa
 ```
 
 ### 本地运行
 
 1.clone 
 ```
-git clone https://github.com/472647301/byron-node-rsa.git
+git clone https://github.com/472647301/react-native-byron-rsa.git
 ```
 2.安装依赖
 ```
-cd byron-node-rsa/
+cd react-native-byron-rsa/
 npm i
 ```
 3.测试
