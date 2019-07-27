@@ -1,11 +1,11 @@
 {
-  "name": "byron-node-rsa",
-  "version": "1.0.7",
+  "name": "react-native-byron-rsa",
+  "version": "1.0.0",
   "description": "Applicable to node-rsa module of react-native",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/472647301/byron-node-rsa.git"
+    "url": "git+https://github.com/472647301/react-native-byron-rsa.git"
   },
   "keywords": [
     "react-native-node-rsa"
@@ -13,9 +13,9 @@
   "author": "Byron ZHU <472647301@qq.com>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/472647301/byron-node-rsa/issues"
+    "url": "https://github.com/472647301/react-native-byron-rsa/issues"
   },
-  "homepage": "https://github.com/472647301/byron-node-rsa#readme",
+  "homepage": "https://github.com/472647301/react-native-byron-rsa#readme",
   "dependencies": {
     "asn1": "^0.2.4"
   }
