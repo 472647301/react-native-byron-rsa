@@ -1,4 +1,4 @@
-# byron-node-rsa
+# react-native-byron-rsa
 适用于react-native的node-rsa模块
 
 ### 安装
